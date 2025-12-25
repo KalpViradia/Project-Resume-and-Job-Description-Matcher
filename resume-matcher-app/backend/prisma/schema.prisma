@@ -1,0 +1,34 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_URI")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(CANDIDATE)
+  createdAt DateTime @default(now())
+  matches   MatchHistory[]
+}
+
+model MatchHistory {
+  id             String   @id @default(uuid())
+  jobDescription String
+  matchScore     Float
+  matchedSkills  String[] // Postgres supports string arrays
+  missingSkills  String[] // Postgres supports string arrays
+  createdAt      DateTime @default(now())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+}
+
+enum Role {
+  CANDIDATE
+  ADMIN
+}

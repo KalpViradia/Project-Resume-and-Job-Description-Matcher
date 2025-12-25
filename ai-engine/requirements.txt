@@ -1,0 +1,12 @@
+nltk
+pandas
+numpy
+sentence-transformers
+torch
+fastapi
+uvicorn
+python-multipart
+pypdf
+python-docx
+google-generativeai
+python-dotenv
