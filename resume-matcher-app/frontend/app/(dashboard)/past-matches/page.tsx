@@ -3,15 +3,17 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
+import Link from "next/link";
+import { Search, Loader2 } from "lucide-react";
 
 interface MatchHistoryItem {
-    id: string; // Prisma uses CUID/UUID usually, assuming string
+    id: string;
     jobDescription: string;
     matchScore: number;
     matchedSkills: string[];
-    missingSkills: string[]; // Although valid in backend, might not be displayed or used here
+    missingSkills: string[];
     createdAt: string;
 }
 
@@ -30,7 +32,6 @@ export default function HistoryPage() {
         const fetchHistory = async () => {
             const token = localStorage.getItem("token");
             if (!token) {
-                // If no token, maybe redirect or show empty
                 setLoading(false);
                 return;
             }
@@ -38,7 +39,7 @@ export default function HistoryPage() {
             try {
                 const res = await fetch("http://localhost:5000/api/history", {
                     headers: {
-                        "x-auth-token": token // Expected by auth middleware usually, need to check middleware but standard is x-auth-token or Authorization
+                        "x-auth-token": token
                     }
                 });
 
@@ -47,7 +48,6 @@ export default function HistoryPage() {
                 }
 
                 const data = await res.json();
-                // Backend returns array
                 setHistory(data);
             } catch (err) {
                 console.error(err);
@@ -60,8 +60,14 @@ export default function HistoryPage() {
         fetchHistory();
     }, []);
 
-    if (loading) return <div className="p-8 text-center">Loading history...</div>;
-    // We can use a Skeleton here later
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center p-16 gap-3 text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Loading history...</span>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6 max-w-4xl mx-auto">
@@ -74,7 +80,20 @@ export default function HistoryPage() {
 
             {!loading && history.length === 0 && (
                 <Card className="text-center p-8">
-                    <p className="text-muted-foreground">No matches found. Go to Dashboard to scan a resume!</p>
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="p-4 rounded-full bg-muted">
+                            <Search className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                        <div className="space-y-2">
+                            <p className="font-medium text-foreground">No matches found yet</p>
+                            <p className="text-sm text-muted-foreground">
+                                Run your first resume match to see your history here.
+                            </p>
+                        </div>
+                        <Button asChild className="mt-2">
+                            <Link href="/matcher">Start New Match</Link>
+                        </Button>
+                    </div>
                 </Card>
             )}
 

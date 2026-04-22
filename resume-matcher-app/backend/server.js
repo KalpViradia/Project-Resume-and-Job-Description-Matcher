@@ -22,7 +22,7 @@ const historyRoutes = require('./routes/history');
 app.use('/api/auth', authRoutes);
 app.use('/api/history', historyRoutes);
 
-console.log('✅ PostgreSQL Connected via Prisma');
+console.log('✅ Prisma client initialized (DB connected on first query)');
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

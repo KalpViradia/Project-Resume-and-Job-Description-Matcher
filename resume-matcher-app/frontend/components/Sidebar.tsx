@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, History, Settings, MessageCircle } from "lucide-react";
+import { LayoutDashboard, History, Settings, MessageCircle, GitCompare } from "lucide-react";
 
 export const Sidebar = () => {
     const pathname = usePathname();
@@ -25,6 +25,11 @@ export const Sidebar = () => {
             name: "Chat Assistant",
             path: "/chat",
             icon: <MessageCircle className="w-5 h-5 mr-3" />,
+        },
+        {
+            name: "Compare Resumes",
+            path: "/compare",
+            icon: <GitCompare className="w-5 h-5 mr-3" />,
         },
     ];
 

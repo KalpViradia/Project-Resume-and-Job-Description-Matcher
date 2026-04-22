@@ -4,13 +4,14 @@ A powerful full-stack application that leverages AI to match resumes with job de
 
 ## 🚀 Features
 
-- **Smart Matching**: Uses BERT embeddings and Cosine Similarity to calculate a precise match score between your resume and a job description.
-- **AI Analysis**: Powered by Google's Gemini AI to provide qualitative feedback, missing skills analysis, and improvement tips.
-- **General Chat Assistant**: A helpful AI assistant that answers general career and resume-related questions (Note: Does not have context of your specific match).
-- **Match History**: Keeps track of all your past matches and scores.
-- **Authentication**: Secure JWT-based signup and login system.
-- **Modern UI**: Built with Next.js, Tailwind CSS, and Shadcn UI for a sleek, responsive dark-mode interface.
-- **PDF Export**: Download detailed match reports as PDF.
+- **Smart Matching**: Uses Sentence-BERT (BERT) embeddings and Cosine Similarity for precise semantic matching between resumes and job descriptions.
+- **AI Analysis**: Powered by Google's Gemini AI to provide qualitative feedback, missing skills analysis, and actionable improvement suggestions.
+- **Resume Comparison**: Compare two different resumes against a single job description to find the best candidate for the role.
+- **Contextual Chat Assistant**: An intelligent career assistant that remembers your match results to provide tailored interview prep and profile optimization advice.
+- **Branding & UI**: Modern, responsive dark-mode interface with custom branding, logo, and a seamless user experience.
+- **Match History**: Securely store and review past matches with full analysis reports.
+- **Robust API**: Integrated exponential backoff and rate-limit handling for reliable Gemini AI interactions.
+- **PDF Export**: Generate and download professional PDF match reports.
 
 ## 🛠️ Tech Stack
 

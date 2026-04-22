@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,12 +22,14 @@ export default function MatcherPage() {
     const [file, setFile] = useState<File | null>(null);
     const [resumeText, setResumeText] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    const [matchResult, setMatchResult] = useState<{ score: number, matched: string[], missing: string[] } | null>(null);
+    const [matchResult, setMatchResult] = useState<{ score: number, matched: string[], missing: string[], suggestions: string[] } | null>(null);
+    const [errorMessage, setErrorMessage] = useState("");
     const [showError, setShowError] = useState(false);
 
     const handleMatch = async () => {
         setIsLoading(true);
         setMatchResult(null);
+        setErrorMessage("");
 
         // Create FormData
         const formData = new FormData();
@@ -36,7 +38,6 @@ export default function MatcherPage() {
         } else if (resumeText) {
             formData.append("resume_text_input", resumeText);
         } else {
-            // Handle case where no file is selected but we enabled button (should check disabled prop)
             setIsLoading(false);
             return;
         }
@@ -49,7 +50,7 @@ export default function MatcherPage() {
             });
 
             if (!res.ok) {
-                throw new Error("Failed to match");
+                throw new Error("AI Engine is unreachable. Please check if the server is running.");
             }
 
             const data = await res.json(); // { match_score, matched_skills, missing_skills }
@@ -57,14 +58,35 @@ export default function MatcherPage() {
             const result = {
                 score: data.match_score,
                 matched: data.matched_skills,
-                missing: data.missing_skills
+                missing: data.missing_skills,
+                suggestions: data.improvement_suggestions || []
             };
 
             setMatchResult(result);
 
+            // Fire confetti for high scores (using local `result`, not stale `matchResult` state)
+            if (result.score > 80) {
+                import("canvas-confetti").then((confetti) => {
+                    confetti.default({
+                        particleCount: 100,
+                        spread: 70,
+                        origin: { y: 0.6 }
+                    });
+                });
+            }
+
+            // Store match context in localStorage for the Chat feature
+            const contextPayload = {
+                resumeText: resumeText || "(uploaded as file)",
+                jobDescription: jd,
+                matchScore: result.score,
+                matchedSkills: result.matched,
+                missingSkills: result.missing
+            };
+            localStorage.setItem("matchContext", JSON.stringify(contextPayload));
+
             // Save to history using Node API
             const token = localStorage.getItem("token");
-            // Only attempt to save if we have a seemingly valid token
             if (token && token !== "undefined" && token !== "null") {
                 try {
                     const historyRes = await fetch("http://localhost:5000/api/history", {
@@ -82,69 +104,31 @@ export default function MatcherPage() {
                     });
 
                     if (!historyRes.ok) {
-                        // If 401/403, might be expired token. Clear it so next time we treat as public.
                         if (historyRes.status === 401 || historyRes.status === 403) {
                             console.warn("Token expired or invalid during save. Clearing token.");
                             localStorage.removeItem("token");
-                            // Optionally redirect or just let them stay as guest
                         } else {
-                            // Genuine error for logged in user
                             throw new Error("Failed to save history");
                         }
                     }
                 } catch (e) {
                     console.error("Failed to save history", e);
-                    // Only show alert if we REALLY thought we were logged in (token existed)
-                    // and it wasn't just an auth error we handled above.
+                    setErrorMessage("We matched your resume but failed to save it to your history. Please check your connection.");
                     setShowError(true);
                 }
             }
         } catch (error) {
             console.error("Match error:", error);
+            setErrorMessage(
+                error instanceof Error
+                    ? error.message
+                    : "Something went wrong. Please check if the AI Engine is running on port 8000."
+            );
             setShowError(true);
         } finally {
             setIsLoading(false);
-            if (matchResult && matchResult.score > 80) {
-                // @ts-ignore
-                import("canvas-confetti").then((confetti) => {
-                    confetti.default({
-                        particleCount: 100,
-                        spread: 70,
-                        origin: { y: 0.6 }
-                    });
-                });
-            }
-
-            if (matchResult) {
-                // Update persistent storage AND active context
-                const contextPayload = {
-                    jobDescription: jd,
-                    matchScore: matchResult.score,
-                    missingSkills: matchResult.missing
-                };
-                localStorage.setItem("chatContext", JSON.stringify(contextPayload));
-
-                // We need to access setContextData here, but we can't use hooks inside handleMatch (callback).
-                // valid strategy: invoke a useEffect that watches matchResult? 
-                // OR just call the function if we hoist it.
-                // But handleMatch is inside the component, so we CAN use the hook's return value.
-            }
         }
     };
-
-    // Use the context hook
-    // const { setContextData } = useChat();
-
-    // Effect to update chat context when matchResult changes
-    // useEffect(() => {
-    //     if (matchResult) {
-    //         setContextData({
-    //             jobDescription: jd,
-    //             matchScore: matchResult.score,
-    //             missingSkills: matchResult.missing
-    //         });
-    //     }
-    // }, [matchResult, jd, setContextData]);
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500 max-w-6xl mx-auto">
@@ -230,6 +214,7 @@ export default function MatcherPage() {
                             matchScore={matchResult.score}
                             matchedSkills={matchResult.matched}
                             missingSkills={matchResult.missing}
+                            improvementSuggestions={matchResult.suggestions}
                         />
                     </div>
                 )}
@@ -240,7 +225,7 @@ export default function MatcherPage() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Error</AlertDialogTitle>
                         <AlertDialogDescription>
-                            We matched your resume but failed to save it to your history. Please check your connection.
+                            {errorMessage || "An unexpected error occurred. Please try again."}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
