@@ -34,6 +34,37 @@ A powerful full-stack application that leverages AI to match resumes with job de
 - **Parsing**: `pypdf`, `python-docx`
 - **NLP**: NLTK, Pandas, NumPy
 
+## 📊 Performance & Scale
+
+### AI / NLP Engine
+| Metric | Value |
+|--------|-------|
+| Embedding Model | all-mpnet-base-v2 (109M params, 768-d vectors) |
+| Embedding Vectors | 700 (200 resumes + 500 JDs) |
+| Skill Taxonomy | 59 skills (47 technical + 12 soft) |
+| Similarity Metric | Cosine similarity on L2-normalized embeddings |
+| LLM Integration | Gemini 1.5 Flash + 2.0 Flash (2-model failover) |
+| Skill Extraction | Hybrid (LLM-primary + regex fallback) |
+| Rate-Limit Handling | Exponential backoff (2^n sec, 3 retries) |
+
+### Data Pipeline
+| Metric | Value |
+|--------|-------|
+| Total Dataset Files | 4,134 across 4 variants (clean, messy, real, noisy PDF) |
+| Pipeline Stages | 5 (Extract → Clean → Tokenize → Skills → Embed) |
+| Sentences Processed | 4,610+ (1,711 resume + 2,899 JD) |
+| Cleaning Rules | 6 modular (unicode, whitespace, bullets, newlines, symbols, case) |
+| Noise Types | 7 (typos, casing, spacing, unicode, missing sections, synonyms, bullets) |
+
+### Architecture
+| Metric | Value |
+|--------|-------|
+| API Endpoints | 8+ across FastAPI (AI) + Express (Auth/History) |
+| Frontend Pages | 7 with 6 custom React components |
+| Source Code | 5,700+ lines across 51 files |
+| Database | PostgreSQL via Prisma ORM (2 models, UUID PKs) |
+| Auth | JWT + BCrypt (salt rounds: 10) |
+
 ## 📂 Project Structure
 
 ```bash
